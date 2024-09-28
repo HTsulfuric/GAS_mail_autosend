@@ -38,6 +38,7 @@ function sendEmails() {
     try {
       sendEmail(address, name, title, body, file, from_email);
       Logger.log("Email sent to " + address);
+      Utilities.sleep(1000);
     } catch (error) {
       Logger.log(
         "Failed to send email to " + address + " Error:" + error.message,
