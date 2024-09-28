@@ -13,12 +13,16 @@ function sendEmails() {
 
   let file = getAttachments(setting);
 
-  const from_email = setting.getRange(2, 7).getValue();
+  let from_email = setting.getRange(2, 7).getValue();
 
-  let aliases = GmailApp.getAliases();
-  if (!aliases.includes(from_email)) {
-    Logger.log("Invalid from email address:" + from_email);
-    return;
+  if (from_email != "") {
+    let aliases = GmailApp.getAliases();
+    if (!aliases.includes(from_email)) {
+      Logger.log("Invalid from email address:" + from_email);
+      return;
+    }
+  } else {
+    from_email = Session.getActiveUser().getEmail();
   }
 
   const list = ss.getSheetByName(listName);
@@ -62,13 +66,25 @@ function getAttachments(setting) {
 }
 
 function sendEmail(address, name, title, body, file, from_email) {
-  const draft = makeDraft(address, name, title, body, file, from_email);
-  const draftId = draft.getId();
-  GmailApp.getDraft(draftId).send();
+  try {
+    const draft = makeDraft(address, name, title, body, file, from_email);
+    const draftId = draft.getId();
+    GmailApp.getDraft(draftId).send();
+  } catch (error) {
+    Logger.log(
+      "Failed to get draft or send email to " +
+        address +
+        "at draftId:" +
+        draftId +
+        " Error:" +
+        error.message,
+    );
+  }
 }
 
 function makeDraft(address, name, title, body, file, from_email) {
   const emailBody = body.replace("{{name}}", name);
+
   const draft = GmailApp.createDraft(address, title, emailBody, {
     attachments: file,
     from: from_email,
