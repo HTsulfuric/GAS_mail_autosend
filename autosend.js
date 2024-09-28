@@ -13,13 +13,18 @@ function sendEmails() {
 
   let file = getAttachments(setting);
 
-  const from_email = setting.getRange(2, 7).getValue();
+  let from_email = setting.getRange(2, 7).getValue();
 
-  let aliases = GmailApp.getAliases();
-  if (!aliases.includes(from_email)) {
-    Logger.log("Invalid from email address:" + from_email);
-    return;
+  if (from_email != "") {
+    let aliases = GmailApp.getAliases();
+    if (!aliases.includes(from_email)) {
+      Logger.log("Invalid from email address:" + from_email);
+      return;
+    }
+  } else {
+    from_email = Session.getActiveUser().getEmail();
   }
+
 
   const list = ss.getSheetByName(listName);
 
@@ -33,6 +38,7 @@ function sendEmails() {
 
     try {
       sendEmail(address, name, title, body, file, from_email);
+      Logger.log("Email sent to " + address);
     } catch (error) {
       Logger.log(
         "Failed to send email to " + address + " Error:" + error.message,
