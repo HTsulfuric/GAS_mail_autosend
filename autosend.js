@@ -16,16 +16,14 @@ function sendEmails() {
   const documentUrl = setting.getRange(2, 3).getValue();
 
   const openDoc = DocumentApp.openByUrl(documentUrl);
-  let body = openDoc.getBody().getText();
+  const body = openDoc.getBody().getText();
 
   let file = [];
-  if (attachBool == "Yes") {
-    for (let i = 4; i <= 6; i++) {
-      if (setting.getRange(2, i).getValue() != "") {
-        let fileId = setting.getRange(2, i).getValue().split("/")[5];
-        let blob = DriveApp.getFileById(fileId).getBlob();
-        file.push(blob);
-      }
+  for (let i = 4; i <= 6; i++) {
+    if (setting.getRange(2, i).getValue() != "") {
+      let fileId = setting.getRange(2, i).getValue().split("/")[5];
+      let blob = DriveApp.getFileById(fileId).getBlob();
+      file.push(blob);
     }
   }
 
