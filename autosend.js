@@ -5,36 +5,56 @@ function onOpen() {
 
 function sendEmails() {
   const ss = SpreadsheetApp.getActive();
-
   const setting = ss.getSheetByName("setting");
-  const list = ss.getSheetByName(setting.getRange(2, 1).getValue());
+
+  const listName = setting.getRange(2, 1).getValue();
+  const title = setting.getRange(2, 2).getValue();
+  const documentUrl = setting.getRange(2, 3).getValue();
+
+  let file = getAttachments(setting);
+
+  const list = ss.getSheetByName(listName);
+
+  const body = DocumentApp.openByUrl(documentUrl).getBody().getText();
 
   const lastRow = list.getLastRow();
 
-  const title = setting.getRange(2, 2).getValue();
+  for (let i = 2; i <= lastRow; i++) {
+    const address = list.getRange(i, 1).getValue();
+    const name = list.getRange(i, 2).getValue();
 
-  const documentUrl = setting.getRange(2, 3).getValue();
+    try {
+      sendEmail(address, name, title, body, file);
+    } catch (error) {
+      Logger.log(
+        "Failed to send email to " + address + " Error:" + error.message,
+      );
+    }
+  }
+}
 
-  const openDoc = DocumentApp.openByUrl(documentUrl);
-  const body = openDoc.getBody().getText();
-
+function getAttachments(setting) {
   let file = [];
   for (let i = 4; i <= 6; i++) {
     if (setting.getRange(2, i).getValue() != "") {
-      let fileId = setting.getRange(2, i).getValue().split("/")[5];
-      let blob = DriveApp.getFileById(fileId).getBlob();
-      file.push(blob);
+      let fileId = setting
+        .getRange(2, i)
+        .getValue()
+        .match(/[-\w]{25,}/);
+      try {
+        let blob = DriveApp.getFileById(fileId).getBlob();
+        file.push(blob);
+      } catch (error) {
+        Logger.log("File not found:" + fileId + " Error:" + error.message);
+      }
     }
   }
+  return file;
+}
 
-  for (let i = 2; i <= lastRow; i++) {
-    let address = list.getRange(i, 1).getValue();
-    let name = list.getRange(i, 2).getValue();
-
-    let emailBody = body.replace("{{name}}", name);
-
-    GmailApp.sendEmail(address, title, emailBody, {
-      attachments: file,
-    });
-  }
+function sendEmail(address, name, title, body, file) {
+  let emailBody = body.replace("{{name}}", name);
+  GmailApp.sendEmail(address, title, emailBody, {
+    attachments: file,
+  });
 }
