@@ -33,6 +33,7 @@ function sendEmails() {
 
     try {
       sendEmail(address, name, title, body, file, from_email);
+      Logger.log("Email sent to " + address);
     } catch (error) {
       Logger.log(
         "Failed to send email to " + address + " Error:" + error.message,
@@ -61,9 +62,16 @@ function getAttachments(setting) {
 }
 
 function sendEmail(address, name, title, body, file, from_email) {
-  let emailBody = body.replace("{{name}}", name);
-  GmailApp.sendEmail(address, title, emailBody, {
+  const draft = makeDraft(address, name, title, body, file, from_email);
+  const draftId = draft.getId();
+  GmailApp.getDraft(draftId).send();
+}
+
+function makeDraft(address, name, title, body, file, from_email) {
+  const emailBody = body.replace("{{name}}", name);
+  const draft = GmailApp.createDraft(address, title, emailBody, {
     attachments: file,
     from: from_email,
   });
+  return draft;
 }
